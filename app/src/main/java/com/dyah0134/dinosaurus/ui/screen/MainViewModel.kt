@@ -5,11 +5,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dyah0134.dinosaurus.model.Dino
+import com.dyah0134.dinosaurus.network.ApiStatus
 import com.dyah0134.dinosaurus.network.DinoApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-enum class ApiStatus { LOADING, SUCCESS, ERROR }
 
 class MainViewModel : ViewModel() {
 
@@ -19,13 +19,8 @@ class MainViewModel : ViewModel() {
     var status = mutableStateOf(ApiStatus.LOADING)
         private set
 
-    private val userEmail = "test@email.com" // ganti sesuai user email
 
-    init {
-        retrieveData()
-    }
-
-    private fun retrieveData() {
+    internal fun retrieveData(userEmail : String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 status.value = ApiStatus.LOADING

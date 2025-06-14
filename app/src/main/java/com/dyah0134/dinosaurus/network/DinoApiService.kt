@@ -35,3 +35,5 @@ object DinoApi {
         return BASE_URL + imagepath
     }
 }
+
+enum class ApiStatus { LOADING, SUCCESS, ERROR }

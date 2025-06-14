@@ -5,24 +5,12 @@ import android.content.res.Configuration
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,7 +34,10 @@ import coil.request.ImageRequest
 import com.dyah0134.dinosaurus.BuildConfig
 import com.dyah0134.dinosaurus.R
 import com.dyah0134.dinosaurus.model.Dino
+import com.dyah0134.dinosaurus.model.User
+import com.dyah0134.dinosaurus.network.ApiStatus
 import com.dyah0134.dinosaurus.network.DinoApi
+import com.dyah0134.dinosaurus.network.UserDataStore
 import com.dyah0134.dinosaurus.ui.theme.DinosaurusTheme
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -55,11 +46,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
     val context = LocalContext.current
+    val dataStore = remember { UserDataStore(context) }
+    val user by dataStore.userFlow.collectAsState(User())
 
     Scaffold(
         topBar = {
@@ -73,8 +65,12 @@ fun MainScreen() {
                 ),
                 actions = {
                     IconButton(onClick = {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            signIn(context)
+                        if (user.email.isEmpty()) {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                signIn(context, dataStore)
+                            }
+                        } else {
+                            Log.d("SIGN-IN", "User: $user")
                         }
                     }) {
                         Icon(
@@ -87,19 +83,27 @@ fun MainScreen() {
             )
         }
     ) { innerPadding ->
-        ScreenContent(Modifier.padding(innerPadding))
+        ScreenContent(Modifier.padding(innerPadding), user)
     }
 }
 
 @Composable
-fun ScreenContent(modifier: Modifier = Modifier) {
+fun ScreenContent(modifier: Modifier = Modifier, user: User) {
     val viewModel: MainViewModel = viewModel()
     val data by viewModel.data
     val status by viewModel.status
 
+    LaunchedEffect(user.email) {
+        viewModel.retrieveData(user.email)
+    }
+
     when (status) {
-        ApiStatus.LOADING -> Text("Loading...", modifier.padding(16.dp))
-        ApiStatus.ERROR -> Text("Gagal memuat data", modifier.padding(16.dp))
+        ApiStatus.LOADING -> {
+            Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Loading...")
+            }
+        }
+
         ApiStatus.SUCCESS -> LazyVerticalGrid(
             modifier = modifier
                 .fillMaxSize()
@@ -110,10 +114,16 @@ fun ScreenContent(modifier: Modifier = Modifier) {
                 ListItem(dino = dino)
             }
         }
+
+        ApiStatus.ERROR -> {
+            Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Gagal memuat data")
+            }
+        }
     }
 }
 
-private suspend fun signIn(context: Context) {
+private suspend fun signIn(context: Context, dataStore: UserDataStore) {
     val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
         .setFilterByAuthorizedAccounts(false)
         .setServerClientId(BuildConfig.API_KEY)
@@ -126,25 +136,30 @@ private suspend fun signIn(context: Context) {
     try {
         val credentialManager = CredentialManager.create(context)
         val result = credentialManager.getCredential(context, request)
-        handleSignIn(result)
+        handleSignIn(result, dataStore)
     } catch (e: GetCredentialException) {
         Log.e("SIGN-IN", "ERROR: ${e.errorMessage}")
     }
 }
 
-private fun handleSignIn(result: GetCredentialResponse) {
+private suspend fun handleSignIn(
+    result: GetCredentialResponse,
+    dataStore: UserDataStore
+) {
     val credential = result.credential
     if (credential is CustomCredential &&
         credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
     ) {
         try {
             val googleId = GoogleIdTokenCredential.createFrom(credential.data)
-            Log.d("SIGN-IN", "User email: ${googleId.id}")
+            val nama = googleId.displayName ?: ""
+            val email = googleId.id
+            val photoUrl = googleId.profilePictureUri.toString()
+            dataStore.saveData(User(nama, email, photoUrl))
         } catch (e: GoogleIdTokenParsingException) {
             Log.e("SIGN-IN", "Error: ${e.message}")
         }
-    }
-    else {
+    } else {
         Log.e("SIGN-IN", "Error: unrecognized custom credential type.")
     }
 }
@@ -164,7 +179,9 @@ fun ListItem(dino: Dino, modifier: Modifier = Modifier) {
                 .build(),
             contentDescription = stringResource(R.string.gambar, dino.nama),
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxWidth().padding(4.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp)
         )
 
         Column(
