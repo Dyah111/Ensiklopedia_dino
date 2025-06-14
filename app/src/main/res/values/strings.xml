@@ -9,7 +9,11 @@
     <string name="tambah_dino">Tambah Dino</string>
     <string name="nama">Nama Dino:</string>
     <string name="jenis">Jenis:</string>
-    <string name="batal">Batal:</string>
+    <string name="batal">Batal</string>
     <string name="simpan">Simpan</string>
+    <string name="pesan_hapus">Apakah anda yakin ingin menghapus?</string>
+    <string name="hapus">Hapus</string>
+    <string name="edit">Edit</string>
+    <string name="menu">Menu</string>
 
 </resources>

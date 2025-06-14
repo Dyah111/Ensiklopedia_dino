@@ -62,6 +62,50 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    fun updateDino(userEmail: String, id: Int, nama: String, jenis: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val namaPart = nama.toRequestBody("text/plain".toMediaTypeOrNull())
+                val jenisPart = jenis.toRequestBody("text/plain".toMediaTypeOrNull())
+
+                val result = DinoApi.service.updateDino(
+                    userEmail = userEmail,
+                    imageId = id,
+                    nama = namaPart,
+                    jenis = jenisPart
+                )
+
+                if (result.status == "success") {
+                    retrieveData(userEmail)
+                } else {
+                    throw Exception(result.message)
+                }
+                Log.d("MainViewModel", "Berhasil di Update")
+            } catch (e: Exception) {
+                Log.d("MainViewModel", "Update failed: ${e.message}")
+                errorMessage.value = "Gagal update: ${e.message}"
+            }
+        }
+    }
+
+    fun deleteData(userId: String, id: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val result = DinoApi.service.deleteDino(
+                    userId,
+                    id
+                )
+                if (result.status == "success") {
+                    retrieveData(userId)
+                } else {
+                    throw Exception(result.message)
+                }
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "Delete failed: ${e.message}")
+            }
+        }
+    }
+
     private fun Bitmap.toMultipartBody(): MultipartBody.Part {
         val stream = ByteArrayOutputStream()
         compress(Bitmap.CompressFormat.JPEG, 80, stream)
