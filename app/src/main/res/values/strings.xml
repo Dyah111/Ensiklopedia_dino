@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Dinosaur Encyclopedia</string>
-    <string name="gambar">Gambar</string>
+    <string name="gambar">Image</string>
+    <string name="profil">Profile</string>
 </resources>
