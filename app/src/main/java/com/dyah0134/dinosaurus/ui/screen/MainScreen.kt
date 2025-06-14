@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -113,8 +114,10 @@ fun ScreenContent(modifier: Modifier = Modifier, user: User) {
 
     when (status) {
         ApiStatus.LOADING -> {
-            Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Loading...")
+            Box(modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
         }
 
@@ -130,8 +133,19 @@ fun ScreenContent(modifier: Modifier = Modifier, user: User) {
         }
 
         ApiStatus.ERROR -> {
-            Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Gagal memuat data")
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                Text(text = stringResource(id = R.string.error))
+                Button(
+                    onClick = { viewModel.retrieveData(user.email) },
+                    modifier = Modifier.padding(top = 16.dp),
+                    contentPadding = PaddingValues(horizontal = 32.dp, vertical = 16.dp)
+                ) {
+                    Text(text = stringResource(id = R.string.try_again))
+                }
             }
         }
     }

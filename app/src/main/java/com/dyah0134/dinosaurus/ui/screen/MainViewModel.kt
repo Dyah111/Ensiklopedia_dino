@@ -20,7 +20,7 @@ class MainViewModel : ViewModel() {
         private set
 
 
-    internal fun retrieveData(userEmail : String) {
+    fun retrieveData(userEmail : String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 status.value = ApiStatus.LOADING
