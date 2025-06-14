@@ -8,6 +8,7 @@ import android.graphics.ImageDecoder
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -68,6 +69,9 @@ fun MainScreen() {
     val dataStore = remember { UserDataStore(context) }
     val user by dataStore.userFlow.collectAsState(User())
 
+    val viewModel: MainViewModel = viewModel()
+    val errorMessage by viewModel.errorMessage
+
     var showProfile by remember { mutableStateOf(false) }
     var showDinoDialog by remember { mutableStateOf(false) }
 
@@ -125,7 +129,7 @@ fun MainScreen() {
             }
         }
     ) { innerPadding ->
-        ScreenContent(Modifier.padding(innerPadding), user)
+        ScreenContent(viewModel, Modifier.padding(innerPadding), user)
 
         if (showProfile) {
             ProfilDialog(
@@ -142,16 +146,20 @@ fun MainScreen() {
                 bitmap = bitmap,
                 onDismissRequest = { showDinoDialog = false}
             ) { nama, jenis ->
-                Log.d("TAMBAH", "$nama $jenis ditambahkan.")
+                viewModel.saveData(user.email, nama, jenis, bitmap!!)
                 showDinoDialog = false
             }
+        }
+
+        if (errorMessage != null) {
+            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+            viewModel.clearMessage()
         }
     }
 }
 
 @Composable
-fun ScreenContent(modifier: Modifier = Modifier, user: User) {
-    val viewModel: MainViewModel = viewModel()
+fun ScreenContent(viewModel: MainViewModel, modifier: Modifier = Modifier, user: User) {
     val data by viewModel.data
     val status by viewModel.status
 
