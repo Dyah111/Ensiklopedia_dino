@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">Dinosaur Encyclopedia</string>
-    <string name="gambar">Gambar %1$s</string>
+    <string name="gambar">Gambar</string>
 </resources>
