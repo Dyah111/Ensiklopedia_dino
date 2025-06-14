@@ -2,4 +2,6 @@
     <string name="app_name">Dinosaur Encyclopedia</string>
     <string name="gambar">Image</string>
     <string name="profil">Profile</string>
+    <string name="logout">Logout</string>">
+    <string name="tutup">Tutup</string>
 </resources>

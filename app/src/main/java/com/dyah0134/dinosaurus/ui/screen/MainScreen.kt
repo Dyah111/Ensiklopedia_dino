@@ -23,10 +23,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.ClearCredentialException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -52,6 +54,7 @@ fun MainScreen() {
     val context = LocalContext.current
     val dataStore = remember { UserDataStore(context) }
     val user by dataStore.userFlow.collectAsState(User())
+    var showProfile by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -70,7 +73,8 @@ fun MainScreen() {
                                 signIn(context, dataStore)
                             }
                         } else {
-                            Log.d("SIGN-IN", "User: $user")
+//                          Log.d("SIGN-IN", "User: $user")
+                            showProfile = true
                         }
                     }) {
                         Icon(
@@ -84,6 +88,16 @@ fun MainScreen() {
         }
     ) { innerPadding ->
         ScreenContent(Modifier.padding(innerPadding), user)
+
+        if (showProfile) {
+            ProfilDialog(
+                user = user,
+                onDismissRequest = { showProfile = false }
+            ) {
+                CoroutineScope(Dispatchers.IO).launch { signOut(context,dataStore) }
+                showProfile = false
+            }
+        }
     }
 }
 
@@ -161,6 +175,18 @@ private suspend fun handleSignIn(
         }
     } else {
         Log.e("SIGN-IN", "Error: unrecognized custom credential type.")
+    }
+}
+
+private suspend fun signOut(context: Context, dataStore: UserDataStore) {
+    try {
+        val credentialManager = CredentialManager.create(context)
+        credentialManager.clearCredentialState(
+            ClearCredentialStateRequest()
+        )
+        dataStore.saveData(User())
+    } catch (e: ClearCredentialException) {
+        Log.e("SIGN-IN", "Error: ${e.errorMessage}")
     }
 }
 
