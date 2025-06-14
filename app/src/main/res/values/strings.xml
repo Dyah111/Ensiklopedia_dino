@@ -7,5 +7,9 @@
     <string name="error">Gagal memuat data.. Koneksi error</string>
     <string name="try_again">Coba lagi</string>
     <string name="tambah_dino">Tambah Dino</string>
+    <string name="nama">Nama Dino:</string>
+    <string name="jenis">Jenis:</string>
+    <string name="batal">Batal:</string>
+    <string name="simpan">Simpan</string>
 
 </resources>

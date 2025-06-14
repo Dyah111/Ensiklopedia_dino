@@ -69,10 +69,12 @@ fun MainScreen() {
     val user by dataStore.userFlow.collectAsState(User())
 
     var showProfile by remember { mutableStateOf(false) }
+    var showDinoDialog by remember { mutableStateOf(false) }
 
     var bitmap: Bitmap? by remember { mutableStateOf(null) }
     val launcher = rememberLauncherForActivityResult(CropImageContract()) {
         bitmap = getCroppedImage(context.contentResolver, it)
+        if (bitmap != null) showDinoDialog = true
     }
 
     Scaffold(
@@ -132,6 +134,16 @@ fun MainScreen() {
             ) {
                 CoroutineScope(Dispatchers.IO).launch { signOut(context,dataStore) }
                 showProfile = false
+            }
+        }
+
+        if (showDinoDialog) {
+            DinoDialog(
+                bitmap = bitmap,
+                onDismissRequest = { showDinoDialog = false}
+            ) { nama, jenis ->
+                Log.d("TAMBAH", "$nama $jenis ditambahkan.")
+                showDinoDialog = false
             }
         }
     }
