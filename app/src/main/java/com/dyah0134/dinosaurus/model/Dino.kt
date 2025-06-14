@@ -7,7 +7,3 @@ data class Dino(
     val jenis: String,
     val imageUrl: String? = null
 )
-
-data class DinoResponse(
-    val data: List<Dino>
-)
