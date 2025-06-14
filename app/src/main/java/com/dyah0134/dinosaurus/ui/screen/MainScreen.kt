@@ -205,6 +205,7 @@ fun ListItem(dino: Dino, modifier: Modifier = Modifier) {
                 .build(),
             contentDescription = stringResource(R.string.gambar, dino.nama),
             contentScale = ContentScale.Crop,
+            placeholder = painterResource(id = R.drawable.loading_img),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(4.dp)
